@@ -5,7 +5,7 @@ import { setUser } from './lib/auth-state';
 import { getSession } from './lib/auth';
 import { renderHome }       from './pages/home';
 import { renderDocsIndex }  from './pages/docs-index';
-import { renderDocPage }    from './pages/doc-page';
+import { renderDocPage }    from './pages/docs-page';
 import { renderLogin }      from './pages/login';
 import { renderRegister }   from './pages/register';
 
