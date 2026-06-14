@@ -1,19 +1,21 @@
-import { CATEGORIES, getPagesByCategory } from '../manifest';
-import { navigate } from '../router';
-import { renderSidebar } from '../components/sidebar';
+import { CATEGORIES, getPagesByCategory } from "../manifest";
+import { navigate } from "../router";
+import { renderSidebar } from "../components/sidebar";
 
 export function renderDocsIndex(root: HTMLElement): void {
-  let groupsHtml = '';
+  let groupsHtml = "";
 
   for (const cat of CATEGORIES) {
     const pages = getPagesByCategory(cat.key);
     const cards = pages
-      .map(p => `
-        <div class="docs-card" data-slug="${p.slug}">
-          <div class="docs-card__title">${p.title}</div>
-          <div class="docs-card__summary">${p.summary}</div>
-        </div>`)
-      .join('');
+      .map(
+        (p) => `
+      <div class="docs-card" data-slug="${p.slug}">
+        <div class="docs-card__title">${p.title}</div>
+        <div class="docs-card__summary">${p.summary}</div>
+      </div>`
+      )
+      .join("");
 
     groupsHtml += `
       <div class="docs-group">
@@ -36,9 +38,9 @@ export function renderDocsIndex(root: HTMLElement): void {
       </div>
     </div>`;
 
-  renderSidebar(root.querySelector('#docs-sidebar')!, '');
+  renderSidebar(root.querySelector("#docs-sidebar")!, "");
 
-  root.querySelectorAll<HTMLElement>('[data-slug]').forEach(card => {
-    card.addEventListener('click', () => navigate(`/${card.dataset.slug}`));
+  root.querySelectorAll<HTMLElement>("[data-slug]").forEach((card) => {
+    card.addEventListener("click", () => navigate(`/${card.dataset.slug}`));
   });
 }
