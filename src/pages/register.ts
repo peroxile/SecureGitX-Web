@@ -13,7 +13,7 @@ export function renderRegister(root: HTMLElement): void {
         <div id="alert-zone"></div>
         <div class="field">
           <label class="field__label" for="email">Email</label>
-          <input class="field__input" id="email" type="email" autocomplete="email" placeholder="you@example.com" />
+          <input class="field__input" id="email" type="email" autocomplete="email" placeholder="name@email.com" />
           <span class="field__error" id="err-email"></span>
         </div>
         <div class="field">
