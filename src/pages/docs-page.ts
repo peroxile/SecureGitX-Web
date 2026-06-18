@@ -1,75 +1,120 @@
-import { getPageContent, getPageMeta, PAGES } from '../manifest';
-import { renderPage } from '../renderer';
-import { renderSidebar } from '../components/sidebar';
-import { attachCodeHandlers } from '../components/code-handlers';
-import { navigate } from '../router';
+import { getPageContent, getPageMeta, PAGES, sourceUrl } from "../manifest";
+import { renderPage } from "../renderer";
+import { renderSidebar } from "../components/sidebar";
+import { attachCodeHandlers } from "../components/code-handlers";
+import { navigate } from "../router";
 
-export function renderDocPage(root: HTMLElement, slug: string): void {
-  const meta = getPageMeta(slug);
-  const raw = getPageContent(slug);
-
-  if (!meta || !raw) {
-    root.innerHTML = `
-      <div class="not-found">
-        <div class="not-found__code">404</div>
-        <div class="not-found__msg">Documentation page not found.</div>
-        <button class="btn-ghost" style="margin-top:1rem" data-link="/docs">Back to docs</button>
-      </div>`;
-    return;
-  }
-
-  const { html, headings } = renderPage(raw);
-
-  // Breadcrumb: Docs > Category > Title
-  const breadcrumb = `
-    <a data-link="/docs">Docs</a>
-    <span style="margin:0 0.4rem;opacity:0.4">›</span>
-    <span>${meta.categoryLabel}</span>
-    <span style="margin:0 0.4rem;opacity:0.4">›</span>
-    <span>${meta.title}</span>`;
-
-  // GitHub source link (adjust org/repo as needed)
-  const ghBase = 'https://github.com/peroxile/SecureGitX/blob/main';
-  const sourceLink = `<a href="${ghBase}/${meta.file.slice(1)}" target="_blank" rel="noopener noreferrer">View source ↗</a>`;
-
-  // Related pages
-  const relatedLinks = meta.related
-    .map(s => PAGES.find(p => p.slug === s))
-    .filter(Boolean)
-    .map(p => `<button class="related__link" data-slug="${p!.slug}">${p!.title}</button>`)
-    .join('');
-
-  // On-page heading nav (only if multiple headings exist)
-  const onPageNav = headings.filter(h => h.level === 2).length > 2
-    ? `<div style="margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:0.5rem">
-        ${headings
-          .filter(h => h.level === 2)
-          .map(h => `<a href="#${h.id}" style="font-family:var(--mono);font-size:0.65rem;color:var(--text-muted);letter-spacing:0.08em">${h.text}</a>`)
-          .join('')}
-       </div>`
-    : '';
-
-  root.innerHTML = `
+function loadingLayout(): string {
+  return `
     <div class="docs-layout">
       <aside class="docs-sidebar" id="docs-sidebar"></aside>
       <main class="docs-main">
-        <div class="page-header">
-          <div class="page-header__breadcrumb">${breadcrumb}</div>
-          <h1 class="page-header__title">${meta.title}</h1>
-          <div class="page-header__summary">${meta.summary}</div>
-          <div class="page-header__source">${sourceLink}</div>
-        </div>
-        ${onPageNav}
-        <div class="md-content">${html}</div>
-        ${relatedLinks ? `<div class="related"><div class="related__label">Related</div><div class="related__links">${relatedLinks}</div></div>` : ''}
+        <div class="sk-line" style="width:35%;height:0.7rem;margin-bottom:0.7rem"></div>
+        <div class="sk-line" style="width:45%;height:1.4rem;margin-bottom:0.5rem"></div>
+        <div class="sk-line" style="width:70%;margin-bottom:2rem"></div>
+        <div class="sk-line" style="width:90%"></div>
+        <div class="sk-line" style="width:82%"></div>
+        <div class="sk-line" style="width:87%;margin-bottom:1.2rem"></div>
+        <div class="sk-line" style="width:100%;height:6rem"></div>
       </main>
     </div>`;
+}
 
-  renderSidebar(root.querySelector('#docs-sidebar')!, slug);
-  attachCodeHandlers(root);
+function notFound(msg: string): string {
+  return `
+    <div class="not-found">
+      <div class="not-found__code">404</div>
+      <div class="not-found__msg">${msg}</div>
+      <button class="btn-ghost" style="margin-top:1rem" data-link="/docs">Back to docs</button>
+    </div>`;
+}
 
-  // Related page navigation
-  root.querySelectorAll<HTMLButtonElement>('[data-slug]').forEach(btn => {
-    btn.addEventListener('click', () => navigate(`/${btn.dataset.slug}`));
+function errorState(): string {
+  return `
+    <div class="not-found">
+      <div class="not-found__code" style="font-size:2.5rem">!</div>
+      <div class="not-found__msg">Failed to load page. Check your connection and try again.</div>
+      <button class="btn-ghost" style="margin-top:1rem" onclick="location.reload()">Retry</button>
+    </div>`;
+}
+
+export function renderDocPage(root: HTMLElement, slug: string): void {
+  const meta = getPageMeta(slug);
+
+  if (!meta) {
+    root.innerHTML = notFound("Documentation page not found.");
+    return;
+  }
+
+  // Render layout shell + sidebar immediately
+  root.innerHTML = loadingLayout();
+  renderSidebar(root.querySelector("#docs-sidebar")!, slug);
+
+  // Fetch and render content
+  getPageContent(slug).then((raw) => {
+    if (!raw) {
+      root.querySelector(".docs-main")!.innerHTML = errorState();
+      return;
+    }
+
+    const { html, headings } = renderPage(raw);
+
+    const breadcrumb = `
+      <button class="page-header__breadcrumb-link" data-link="/docs">Docs</button>
+      <span class="bc:-sep">›</span>
+      <span>${meta.categoryLabel}</span>
+      <span class="bc:-sep">›</span>
+      <span>${meta.title}</span>`;
+
+    const onPageNav =
+      headings.filter((h) => h.level === 2).length > 2
+        ? `<div class="on-page-nav">
+          ${headings
+            .filter((h) => h.level === 2)
+            .map(
+              (h) =>
+                `<a class="on-page-nav__link" href="#${h.id}">${h.text}</a>`
+            )
+            .join("")}
+         </div>`
+        : "";
+
+    const relatedLinks = meta.related
+      .map((s) => PAGES.find((p) => p.slug === s))
+      .filter((p): p is (typeof PAGES)[0] => !!p)
+      .map(
+        (p) =>
+          `<button class="related__link" data-slug="${p.slug}">${p.title}</button>`
+      )
+      .join("");
+
+    root.querySelector(".docs-main")!.innerHTML = `
+      <div class="page-header">
+        <div class="page-header__breadcrumb">${breadcrumb}</div>
+        <h1 class="page-header__title">${meta.title}</h1>
+        <div class="page-header__summary">${meta.summary}</div>
+        <div class="page-header__source">
+          <a href="${sourceUrl(
+            meta.file
+          )}" target="_blank" rel="noopener noreferrer">View source on GitHub ↗</a>
+        </div>
+      </div>
+      ${onPageNav}
+      <div class="md-content">${html}</div>
+      ${
+        relatedLinks
+          ? `
+        <div class="related">
+          <div class="related__label">Related</div>
+          <div class="related__links">${relatedLinks}</div>
+        </div>`
+          : ""
+      }`;
+
+    attachCodeHandlers(root);
+
+    root.querySelectorAll<HTMLButtonElement>("[data-slug]").forEach((btn) => {
+      btn.addEventListener("click", () => navigate(`/${btn.dataset.slug}`));
+    });
   });
 }

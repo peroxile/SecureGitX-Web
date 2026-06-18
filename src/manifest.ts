@@ -100,6 +100,16 @@ export const PAGES: PageMeta[] = [
     related: ["docs/cli/rules", "docs/develop/architecture"],
   },
   {
+    slug: "docs/default/agent-guide",
+    title: "agent guide",
+    category: "defaults",
+    categoryLabel: "Defaults",
+    order: 2,
+    summary: "Guidance for AI coding agents and automated pipelines.",
+    file: "/docs/default/agent-guide.md",
+    related: ["docs/cli/hook", "docs/cli/scan"],
+  },
+  {
     slug: "docs/develop/architecture",
     title: "architecture",
     category: "develop",
