@@ -1,12 +1,19 @@
-import { renderMarkdown, extractSection, parseFrontMatter } from '../renderer';
-import { attachCodeHandlers } from '../components/code-handlers';
-import { navigate } from '../router';
-import readmeRaw from '../../README.md?raw';
+import { renderMarkdown, extractSection, parseFrontMatter } from "../renderer";
+import { attachCodeHandlers } from "../components/code-handlers";
+import { getReadme } from "../manifest";
+import { navigate } from "../router";
 
-const { body: readme } = parseFrontMatter(readmeRaw);
+function skeleton(): string {
+  return `
+    <div class="sk-line" style="width:60%;height:1.1rem;margin-bottom:0.8rem"></div>
+    <div class="sk-line" style="width:90%"></div>
+    <div class="sk-line" style="width:80%"></div>
+    <div class="sk-line" style="width:85%;margin-bottom:1.5rem"></div>
+    <div class="sk-line" style="width:100%;height:5rem"></div>`;
+}
 
-export function renderHome(root: HTMLElement): void {
-  root.innerHTML = `
+function shell(): string {
+  return `
     <div class="home">
       <section class="hero">
         <div class="hero__eyebrow">◈ Open source · Local first · Pre-commit</div>
@@ -25,22 +32,17 @@ export function renderHome(root: HTMLElement): void {
 
       <section class="home-section">
         <div class="home-section__label">Install</div>
-        <div class="md-content" id="s-install"></div>
+        <div class="md-content" id="s-install">${skeleton()}</div>
       </section>
 
       <section class="home-section">
         <div class="home-section__label">Quick start</div>
-        <div class="md-content" id="s-quickstart"></div>
+        <div class="md-content" id="s-quickstart">${skeleton()}</div>
       </section>
 
       <section class="home-section">
         <div class="home-section__label">How it works</div>
-        <div class="md-content" id="s-how"></div>
-        <p style="margin-top:1rem;font-size:0.84rem;color:var(--text-2)">
-          The hook is the only enforcement point. The daemon, CLI scan, and
-          gitignore builder are advisory — they inform and suggest, but the
-          commit gate lives entirely in the pre-commit hook path.
-        </p>
+        <div class="md-content" id="s-how">${skeleton()}</div>
       </section>
 
       <section class="home-section" style="padding-bottom:4rem;border-bottom:1px solid var(--border-sub)">
@@ -58,13 +60,36 @@ export function renderHome(root: HTMLElement): void {
            target="_blank" rel="noopener noreferrer">github.com/peroxile/SecureGitX</a>
       </footer>
     </div>`;
+}
 
-  root.querySelector('#s-install')!.innerHTML    = renderMarkdown(extractSection(readme, 'Install'));
-  root.querySelector('#s-quickstart')!.innerHTML = renderMarkdown(extractSection(readme, 'Quick start'));
-  root.querySelector('#s-how')!.innerHTML        = renderMarkdown(extractSection(readme, 'How it works'));
+export function renderHome(root: HTMLElement): void {
+  root.innerHTML = shell();
 
-  attachCodeHandlers(root);
+  root
+    .querySelector("#home-docs-btn")
+    ?.addEventListener("click", () => navigate("/docs"));
+  root
+    .querySelector("#home-docs-btn2")
+    ?.addEventListener("click", () => navigate("/docs"));
 
-  root.querySelector('#home-docs-btn')?.addEventListener('click',  () => navigate('/docs'));
-  root.querySelector('#home-docs-btn2')?.addEventListener('click', () => navigate('/docs'));
+  // Async: fetch README and fill sections
+  getReadme().then((raw) => {
+    if (!raw) return; // silently leave skeleton if fetch fails
+
+    const { body } = parseFrontMatter(raw);
+
+    const fill = (id: string, section: string) => {
+      const el = root.querySelector(`#${id}`);
+      if (!el) return;
+      const content = extractSection(body, section);
+      el.innerHTML = content
+        ? renderMarkdown(content)
+        : `<p style="color:var(--text-muted);font-family:var(--mono);font-size:0.75rem">Section not found.</p>`;
+      attachCodeHandlers(el as HTMLElement);
+    };
+
+    fill("s-install", "Install");
+    fill("s-quickstart", "Quick start");
+    fill("s-how", "How it works");
+  });
 }
