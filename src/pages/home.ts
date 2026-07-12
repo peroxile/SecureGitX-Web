@@ -36,6 +36,11 @@ function shell(): string {
       </section>
 
       <section class="home-section">
+        <div class="home-section__label">One Liner</div>
+        <div class="md-content" id="s-oneliner">${skeleton()}</div>
+      </section>
+
+      <section class="home-section">
         <div class="home-section__label">Quick start</div>
         <div class="md-content" id="s-quickstart">${skeleton()}</div>
       </section>
@@ -48,7 +53,7 @@ function shell(): string {
       <section class="home-section" style="padding-bottom:4rem;border-bottom:1px solid var(--border-sub)">
         <div class="home-section__label">Documentation</div>
         <p style="font-size:0.875rem;color:var(--text-2);max-width:480px;line-height:1.7;margin-bottom:1.2rem">
-          Full command reference, rules schema, agent guide, architecture, and
+          Full command reference, rules schema, architecture, and
           development setup.
         </p>
         <button class="btn-primary" id="home-docs-btn2">Browse docs →</button>
@@ -68,28 +73,49 @@ export function renderHome(root: HTMLElement): void {
   root
     .querySelector("#home-docs-btn")
     ?.addEventListener("click", () => navigate("/docs"));
+
   root
     .querySelector("#home-docs-btn2")
     ?.addEventListener("click", () => navigate("/docs"));
 
-  // Async: fetch README and fill sections
   getReadme().then((raw) => {
-    if (!raw) return; // silently leave skeleton if fetch fails
+    if (!raw) return;
 
     const { body } = parseFrontMatter(raw);
 
-    const fill = (id: string, section: string) => {
-      const el = root.querySelector(`#${id}`);
+    const fill = (id: string, content: string | null) => {
+      const el = root.querySelector<HTMLElement>(`#${id}`);
       if (!el) return;
-      const content = extractSection(body, section);
+
       el.innerHTML = content
         ? renderMarkdown(content)
         : `<p style="color:var(--text-muted);font-family:var(--mono);font-size:0.75rem">Section not found.</p>`;
-      attachCodeHandlers(el as HTMLElement);
+
+      attachCodeHandlers(el);
     };
 
-    fill("s-install", "Install");
-    fill("s-quickstart", "Quick start");
-    fill("s-how", "How it works");
+    const install =
+      extractSection(body, "Install") ||
+      extractSection(body, "Installation") ||
+      extractSection(body, "Setup");
+
+    const oneliner =
+      extractSection(body, "One Liner") ||
+      extractSection(body, "One liner") ||
+      extractSection(body, "One-line install") ||
+      extractSection(body, "One line install");
+
+    const quickstart =
+      extractSection(body, "Quick start") ||
+      extractSection(body, "Quick Start");
+
+    const how =
+      extractSection(body, "How it works") ||
+      extractSection(body, "How It Works");
+
+    fill("s-install", install);
+    fill("s-oneliner", oneliner);
+    fill("s-quickstart", quickstart);
+    fill("s-how", how);
   });
 }
