@@ -158,7 +158,6 @@ const PURIFY_OPTS: Parameters<typeof DOMPurify.sanitize>[1] = {
     "em",
     "blockquote",
     "table",
-    "img",
     "thead",
     "tbody",
     "tr",
