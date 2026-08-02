@@ -1,4 +1,8 @@
-type Handler = (root: HTMLElement, params: RegExpMatchArray) => void;
+// src/router.ts
+type Handler = (
+  root: HTMLElement,
+  params: RegExpMatchArray
+) => void | Promise<void>;
 
 interface Route {
   pattern: RegExp;
@@ -36,7 +40,7 @@ function dispatch(rawPath: string): void {
   for (const r of routes) {
     const match = path.match(r.pattern);
     if (match) {
-      r.handler(root, match);
+      void r.handler(root, match);
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       return;
     }
@@ -47,8 +51,7 @@ function dispatch(rawPath: string): void {
       <div class="not-found__code">404</div>
       <div class="not-found__msg">Page not found.</div>
       <button class="btn-ghost" style="margin-top:1rem" data-link="/">Go back</button>
-    </div>
-  `;
+    </div>`;
 }
 
 export function initRouter(rootEl: HTMLElement): void {
@@ -76,7 +79,7 @@ export function initRouter(rootEl: HTMLElement): void {
 
 function normalizePath(path: string): string {
   if (!path) return "/";
-  const withoutQuery = path.split("?")[0].split("#")[0];
-  if (withoutQuery === "/") return "/";
-  return withoutQuery.replace(/\/+$/, "");
+  const clean = path.split("?")[0].split("#")[0];
+  if (clean === "/") return "/";
+  return clean.replace(/\/+$/, "");
 }
