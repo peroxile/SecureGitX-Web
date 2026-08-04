@@ -6,7 +6,7 @@ export interface PageMeta {
   categoryLabel: string;
   order: number;
   summary: string;
-  file: string;
+  file: string; // exact markdown file path
   related: string[]; // internal slugs
 }
 
@@ -129,7 +129,7 @@ export const PAGES: PageMeta[] = [
     related: ["architecture", "rules-format"],
   },
   {
-    slug: "exit-codes",
+    slug: "exitcodes",
     route: "/docs/develop/exitcodes",
     title: "exit codes",
     category: "develop",
@@ -141,17 +141,16 @@ export const PAGES: PageMeta[] = [
   },
 ];
 
-// Simple in-memory cache — avoids re-fetching on SPA navigation
-const _cache = new Map<string, string>();
+const cache = new Map<string, string>();
 
 async function fetchRaw(url: string): Promise<string | null> {
-  if (_cache.has(url)) return _cache.get(url)!;
+  if (cache.has(url)) return cache.get(url)!;
 
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
     const text = await res.text();
-    _cache.set(url, text);
+    cache.set(url, text);
     return text;
   } catch {
     return null;
@@ -170,14 +169,12 @@ function normalizeRoute(input: string): string {
 }
 
 function normalizeSlug(input: string): string {
-  const cleaned = normalizePath(input).replace(/^\/+/, "");
-  return cleaned;
+  return normalizePath(input).replace(/^\/+/, "");
 }
 
 function findPage(input: string): PageMeta | undefined {
   const route = normalizeRoute(input);
   const slug = normalizeSlug(input);
-
   return PAGES.find((p) => p.route === route || p.slug === slug);
 }
 
