@@ -1,30 +1,55 @@
-import { PAGES, CATEGORIES } from "../manifest";
+import { PAGES } from "../manifest";
 import { navigate } from "../router";
 
 export function renderSidebar(
   container: HTMLElement,
-  currentSlug: string
+  currentRoute: string
 ): void {
-  let html = "";
+  const grouped = {
+    cli: PAGES.filter((p) => p.category === "cli"),
+    defaults: PAGES.filter((p) => p.category === "defaults"),
+    develop: PAGES.filter((p) => p.category === "develop"),
+  };
 
-  for (const cat of CATEGORIES) {
-    const pages = PAGES.filter((p) => p.category === cat.key).sort(
-      (a, b) => a.order - b.order
-    );
-    html += `<div class="docs-sidebar__label">${cat.label}</div>`;
-    for (const p of pages) {
-      const active = p.slug === currentSlug;
-      html += `<button class="docs-sidebar__item${
-        active ? " docs-sidebar__item--active" : ""
-      }" data-slug="${p.slug}">${p.title}</button>`;
-    }
-  }
-
-  container.innerHTML = html;
+  container.innerHTML = Object.entries(grouped)
+    .map(([key, pages]) => {
+      const label =
+        key === "cli" ? "CLI" : key === "defaults" ? "Defaults" : "Develop";
+      return `
+        <div class="docs-sidebar__group">
+          <div class="docs-sidebar__label">${label}</div>
+          ${pages
+            .sort((a, b) => a.order - b.order)
+            .map(
+              (page) => `
+                <button
+                  type="button"
+                  class="docs-sidebar__item ${
+                    normalize(currentRoute) === normalize(page.route)
+                      ? "docs-sidebar__item--active"
+                      : ""
+                  }"
+                  data-link="${page.route}"
+                >
+                  ${page.title}
+                </button>
+              `
+            )
+            .join("")}
+        </div>
+      `;
+    })
+    .join("");
 
   container
-    .querySelectorAll<HTMLButtonElement>("[data-slug]")
+    .querySelectorAll<HTMLButtonElement>("[data-link]")
     .forEach((btn) => {
-      btn.addEventListener("click", () => navigate(`/${btn.dataset.slug}`));
+      btn.addEventListener("click", () =>
+        navigate(btn.dataset.link || "/docs")
+      );
     });
+}
+
+function normalize(v: string): string {
+  return (v || "/").replace(/\/+$/, "") || "/";
 }
