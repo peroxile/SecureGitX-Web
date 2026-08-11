@@ -17,12 +17,8 @@ function shell(): string {
     <div class="home">
       <section class="hero">
         <div class="hero__eyebrow">◈ Open source · Local first · Pre-commit</div>
-        <h1 class="hero__title">Stop secrets before<br><em>they leave your machine.</em></h1>
         <p class="hero__desc">
-          SecureGitX is a local first pre-commit secret scanner. It inspects staged changes
-          before <code>git commit</code> and blocks the commit if it finds API keys,
-          tokens, credentials, or sensitive filenames.
-        </p>
+        SecureGitX is a local first pre-commit secret scanner that blocks API keys, tokens, credentials, or sensitive filenames before they get committed.</p>
         <div class="hero__actions">
           <button class="btn-primary" id="home-docs-btn">Read the docs →</button>
           <a class="btn-ghost" href="https://github.com/peroxile/SecureGitX"
@@ -40,10 +36,6 @@ function shell(): string {
         <div class="md-content" id="s-oneliner">${skeleton()}</div>
       </section>
 
-      <section class="home-section">
-        <div class="home-section__label">Quick start</div>
-        <div class="md-content" id="s-quickstart">${skeleton()}</div>
-      </section>
 
       <section class="home-section">
         <div class="home-section__label">How it works</div>
@@ -105,17 +97,12 @@ export function renderHome(root: HTMLElement): void {
       extractSection(body, "One-line install") ||
       extractSection(body, "One line install");
 
-    const quickstart =
-      extractSection(body, "Quick start") ||
-      extractSection(body, "Quick Start");
-
     const how =
       extractSection(body, "How it works") ||
       extractSection(body, "How It Works");
 
     fill("s-install", install);
     fill("s-oneliner", oneliner);
-    fill("s-quickstart", quickstart);
     fill("s-how", how);
   });
 }
