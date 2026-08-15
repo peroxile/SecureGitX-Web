@@ -8,8 +8,9 @@ import { renderDocsIndex }  from './pages/docs-index';
 import { renderDocPage }    from './pages/docs-page';
 import { renderLogin }      from './pages/login';
 import { renderRegister }   from './pages/register';
+import { renderDashboard }   from './pages/dashboard';
 
-// Resolve session silently on load — auth token lives in httpOnly cookie
+// Resolve session on load — token lives in httpOnly cookie
 getSession().then(user => { if (user) setUser(user); });
 
 // Register routes
@@ -18,6 +19,7 @@ route(/^\/docs$/, (el) => renderDocsIndex(el));
 route(/^\/docs\/(.+)$/, (el, m) => renderDocPage(el, m[1]));
 route(/^\/login$/, (el) => renderLogin(el));
 route(/^\/register$/, (el) => renderRegister(el));
+route(/^\/dashboard$/, (el) => renderDashboard(el));
 
 // Mount
 const root = document.getElementById('root')!;
